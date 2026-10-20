@@ -1,3 +1,15 @@
+def assign_value(value,compressed_data,decompressed_data, original_code_table, index, length_of_bits):
+
+    if value != 'others':
+        decompressed_data += value
+    elif value == 'others':
+        value = original_code_table.get(compressed_data[index:index + length_of_bits])
+        decompressed_data += value
+        index += length_of_bits
+
+    return decompressed_data , index
+
+
 def decompress(compressed_data , huffman_table , original_code_table , original_bits):
     decompressed_data = ''
     #It is not efficient to loop on the compressed_data bit by bit ,so all we need is
@@ -15,12 +27,7 @@ def decompress(compressed_data , huffman_table , original_code_table , original_
 
         if val is not None: # If the code have a corresponding value in huffman_table
            i+=min_length_huffman
-           if val != 'others' :
-               decompressed_data += val
-           elif val == 'others' :
-               val = original_code_table.get(compressed_data[i:i+length_of_bits])
-               decompressed_data += val
-               i+=length_of_bits
+           decompressed_data , i = assign_value(val , compressed_data , decompressed_data , original_code_table , i, length_of_bits)
 
 
         else:
@@ -30,11 +37,6 @@ def decompress(compressed_data , huffman_table , original_code_table , original_
                j+=1
 
             i+=min_length_huffman+j-1
-            if val != 'others' :
-                decompressed_data += val
-            elif val == 'others' :
-                val = original_code_table.get(compressed_data[i:i+length_of_bits])
-                decompressed_data += val
-                i+=length_of_bits
+            decompressed_data, i = assign_value(val, compressed_data, decompressed_data, original_code_table, i ,length_of_bits)
 
     return decompressed_data
