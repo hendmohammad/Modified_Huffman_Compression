@@ -1,38 +1,21 @@
-from compression import compress
-from decompression import decompress
-from file_handling import file_menu
+from file_handling import compress_file_menu, decompress_file_menu
 
+while True:
+    print("\n\nModified Huffman Compressor: \n ")
+    print("1. Compress ")
+    print("2. Decompress ")
+    print("3. Exit")
 
-def text_mode():
-    text = input("Enter the text: ")
-    limit = float(input("Enter the minimum limit of probabilities (e.g. 0.05): "))
+    choice = input("Choose: ").strip()
 
-    # compression
-    compressed, symDecode_table, originalDecode_table, original_bits = compress(text, limit)
-    print("\nCompressed bits      :", compressed)
+    if choice == "1":
+        compress_file_menu()
 
-    # decompression
-    decompressed = decompress(compressed, symDecode_table, originalDecode_table, original_bits)
-    print("\nDecompressed text    :", decompressed)
+    elif choice == "2":
+        decompress_file_menu()
 
+    elif choice == "3":
+        break
 
-def main():
-    while True:
-        print("\n=== Modified Huffman Compression ===")
-        print("1) Text mode (type a text)")
-        print("2) File mode (compress / decompress files)")
-        print("3) Exit")
-        choice = input("Choose: ").strip()
-
-        if choice == "1":
-            text_mode()
-        elif choice == "2":
-            file_menu()
-        elif choice == "3":
-            break
-        else:
-            print("Invalid choice.")
-
-
-if __name__ == "__main__":
-    main()
+    else:
+        print("Invalid choice.")

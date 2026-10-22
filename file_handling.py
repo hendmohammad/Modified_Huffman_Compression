@@ -7,7 +7,7 @@ import struct
 
 
 def bits_to_bytes(bits):
-       if not bits:
+    if not bits:
         return b""
     pad = (-len(bits)) % 8
     bits += "0" * pad
@@ -15,19 +15,19 @@ def bits_to_bytes(bits):
 
 
 def bytes_to_bits(data, bit_length):
-      if not data:
+    if not data:
         return ""
     bits = bin(int.from_bytes(data, "big"))[2:].zfill(len(data) * 8)
     return bits[:bit_length]
 
 
-def compress_file(in_path, out_path, limit):
+def compress_file(in_path, out_path, limit, return_bits=False):
     with open(in_path, "rb") as f:
         raw = f.read()
 
     ext = os.path.splitext(in_path)[1]
 
-    if len(raw) == 0:  
+    if len(raw) == 0:
         header = {"empty": True, "ext": ext}
         payload = b""
     else:
@@ -36,18 +36,22 @@ def compress_file(in_path, out_path, limit):
         header = {
             "empty": False,
             "ext": ext,
-            "sym": sym_dec,          
-            "org": org_dec,          
+            "sym": sym_dec,
+            "org": org_dec,
             "org_bits": org_bits,
             "bit_length": len(bits),
         }
         payload = bits_to_bytes(bits)
 
     header_bytes = json.dumps(header).encode("utf-8")
+    
     with open(out_path, "wb") as f:
         f.write(struct.pack(">I", len(header_bytes)))
         f.write(header_bytes)
         f.write(payload)
+
+    if return_bits:
+        return len(raw), os.path.getsize(out_path), bits if len(raw) > 0 else ""
 
     return len(raw), os.path.getsize(out_path)
 
@@ -82,9 +86,11 @@ def pick_file(title, filetypes=(("All files", "*.*"),)):
         path = filedialog.askopenfilename(title=title, filetypes=filetypes)
         root.destroy()
     except Exception:
-        pass  
+        pass
+
     if not path:
         path = input(f"{title} - type the file path: ").strip().strip('"')
+
     return path
 
 
@@ -96,44 +102,51 @@ def read_limit():
                 return value
         except ValueError:
             pass
+
         print("Invalid value, enter a number between 0 and 1.")
 
-def file_menu():
-
-    while True:
-        print("\n1) Compress a file\n2) Decompress a file\n3) Back")
-        choice = input("Choose: ").strip()
-
-        if choice == "1":
-            in_path = pick_file("Select the file to compress")
-            if not os.path.isfile(in_path):
-                print("File not found.")
-                continue
-            limit = read_limit()
-            out_path = os.path.splitext(in_path)[0] + ".bin"
-            if os.path.abspath(out_path) == os.path.abspath(in_path):
-                out_path = in_path + ".bin"
-            before, after = compress_file(in_path, out_path, limit)
-            print(f"Saved: {out_path}")
-            print(f"Size: {before} -> {after} bytes (including overhead)")
-            if before:
-                print(f"Ratio: {after / before:.2%} of the original")
-
-        elif choice == "2":
-            in_path = pick_file("Select the compressed (.bin) file",
-                                (("Compressed", "*.bin"), ("All files", "*.*")))
-            if not os.path.isfile(in_path):
-                print("File not found.")
-                continue
-            tmp_out = os.path.splitext(in_path)[0] + "_restored"
-            ext, size = decompress_file(in_path, tmp_out)
-            final = tmp_out + ext
-            os.replace(tmp_out, final)
-            print(f"Saved: {final} ({size} bytes)")
-
-        elif choice == "3":
-            break
 
 
-if __name__ == "__main__":
-    file_menu()
+def compress_file_menu():
+
+    output_dir = "Output"
+
+    in_path = pick_file("Select the file to compress")
+
+    if not os.path.isfile(in_path):
+        print("File not found.")
+        return
+
+    limit = read_limit()
+    out_path = os.path.join(output_dir, "compressed.bin")
+
+    before, after = compress_file(in_path, out_path, limit)
+
+    print(f"Saved: {out_path}")
+    print(f"Size: {before} -> {after} bytes (including overhead)")
+
+    if before:
+        print(f"Ratio: {after / before:.2%} of the original")
+
+
+def decompress_file_menu():
+
+    output_dir = "Output"
+
+    in_path = pick_file(
+        "Select the compressed (.bin) file",
+        (("Compressed", "*.bin"), ("All files", "*.*"))
+    )
+
+    if not os.path.isfile(in_path):
+        print("File not found.")
+        return
+
+    tmp_out = os.path.join(output_dir, "decompressed_temp")
+
+    ext, size = decompress_file(in_path, tmp_out)
+
+    final = os.path.join(output_dir, "decompressed.txt")
+    os.replace(tmp_out, final)
+
+    print(f"Saved: {final} ({size} bytes)")
