@@ -76,7 +76,6 @@ def decompress_file(in_path, out_path):
 
 
 def pick_file(title, filetypes=(("All files", "*.*"),)):
-    """File-chooser window (Tkinter). Falls back to typing the path."""
     path = ""
     try:
         from tkinter import Tk, filedialog
