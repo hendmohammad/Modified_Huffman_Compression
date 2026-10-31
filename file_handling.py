@@ -96,7 +96,7 @@ def pick_file(title, filetypes=(("All files", "*.*"),)):
 def read_limit():
     while True:
         try:
-            value = float(input("Minimum symbol probability (0 to 1, e.g. 0.01): "))
+            value = float(input("Minimum symbol probability (0 to 1, ex. 0.01): "))
             if 0 <= value <= 1:
                 return value
         except ValueError:
